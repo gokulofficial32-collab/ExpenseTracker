@@ -1,0 +1,360 @@
+
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Expense Tracker</title>
+
+    <link rel="stylesheet"
+          href="{% static 'css/style.css' %}">
+
+    <style>
+        .budget-section {
+            margin-top: 25px;
+        }
+
+        .budget-card {
+            background: linear-gradient(135deg, #111827, #2563eb);
+            color: white;
+            padding: 28px;
+            border-radius: 18px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .budget-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .budget-header h2 {
+            margin: 0;
+        }
+
+        .budget-month {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .budget-details {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .budget-item {
+            background: rgba(255, 255, 255, 0.12);
+            padding: 18px;
+            border-radius: 12px;
+        }
+
+        .budget-item p {
+            margin-bottom: 8px;
+            font-size: 13px;
+            opacity: 0.8;
+        }
+
+        .budget-item h3 {
+            margin: 0;
+            font-size: 23px;
+        }
+
+        .balance-positive {
+            color: #86efac;
+        }
+
+        .balance-negative {
+            color: #fca5a5;
+        }
+
+        @media (max-width: 700px) {
+            .budget-details {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- Header -->
+    <div class="header">
+        <div>
+            <p class="small-title">PERSONAL FINANCE</p>
+            <h1>Expense Tracker</h1>
+        </div>
+
+        <div class="header-icon">
+            ₹
+        </div>
+    </div>
+
+
+    <!-- Summary Cards -->
+    <div class="summary">
+
+        <div class="summary-card purple">
+            <p>Total Expenses</p>
+            <h2>₹{{ total_expense }}</h2>
+            <span>Overall spending</span>
+        </div>
+
+        <div class="summary-card blue">
+            <p>Total Transactions</p>
+            <h2>{{ expense_count }}</h2>
+            <span>Expenses recorded</span>
+        </div>
+
+        <div class="summary-card green">
+            <p>Latest Expense</p>
+
+            {% if latest_expense %}
+                <h2>₹{{ latest_expense.amount }}</h2>
+                <span>{{ latest_expense.title }}</span>
+            {% else %}
+                <h2>₹0</h2>
+                <span>No expenses yet</span>
+            {% endif %}
+        </div>
+
+        <!-- Monthly Budget Card -->
+        <div class="summary-card orange">
+            <p>Monthly Budget</p>
+
+            {% if monthly_budget %}
+                <h2>₹{{ monthly_budget.amount }}</h2>
+                <span>This month's budget</span>
+            {% else %}
+                <h2>₹0</h2>
+                <span>Budget not set</span>
+            {% endif %}
+        </div>
+
+    </div>
+    <!-- SET MONTHLY BUDGET -->
+<div class="form-box">
+
+    <div class="section-title">
+        <div>
+            <p class="small-title">MONTHLY BUDGET</p>
+            <h2>Set Your Budget</h2>
+        </div>
+    </div>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <input type="hidden" name="budget_form" value="1">
+
+        <div class="form-group">
+            <label>Monthly Budget Amount</label>
+
+            <input
+                type="number"
+                name="budget_amount"
+                step="0.01"
+                min="0"
+                placeholder="₹ 20,000"
+                required>
+        </div>
+
+        <button type="submit">
+            Set Budget
+        </button>
+    </form>
+
+</div>
+
+
+    <!-- Monthly Budget Details -->
+    <div class="budget-section">
+
+        <div class="budget-card">
+
+            <div class="budget-header">
+                <div>
+                    <p class="small-title">MONTHLY FINANCE</p>
+                    <h2>Budget Overview</h2>
+                </div>
+
+                <div class="budget-month">
+                    {{ today|date:"F Y" }}
+                </div>
+            </div>
+
+            <div class="budget-details">
+
+                <div class="budget-item">
+                    <p>Budget</p>
+
+                    {% if monthly_budget %}
+                        <h3>₹{{ monthly_budget.amount }}</h3>
+                    {% else %}
+                        <h3>₹0</h3>
+                    {% endif %}
+                </div>
+
+                <div class="budget-item">
+                    <p>Spent This Month</p>
+                    <h3>₹{{ monthly_spent }}</h3>
+                </div>
+
+                <div class="budget-item">
+                    <p>Balance</p>
+
+                    {% if monthly_balance >= 0 %}
+                        <h3 class="balance-positive">
+                            ₹{{ monthly_balance }}
+                        </h3>
+                    {% else %}
+                        <h3 class="balance-negative">
+                            -₹{{ monthly_balance|stringformat:"s"|slice:"1:" }}
+                        </h3>
+                    {% endif %}
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Add Expense -->
+    <div class="form-box">
+
+        <div class="section-title">
+            <div>
+                <p class="small-title">NEW TRANSACTION</p>
+                <h2>Add Expense</h2>
+            </div>
+
+            <div class="plus-icon">+</div>
+        </div>
+
+        <form method="POST">
+
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label>Expense Name</label>
+
+                <input
+                    type="text"
+                    name="title"
+                    placeholder="Eg: Dinner"
+                    required>
+            </div>
+
+            <div class="form-group">
+                <label>Amount</label>
+
+                <input
+                    type="number"
+                    name="amount"
+                    step="0.01"
+                    placeholder="₹ 0.00"
+                    required>
+            </div>
+
+            <div class="form-group">
+                <label>Category</label>
+
+                <input
+                    type="text"
+                    name="category"
+                    placeholder="Food / Travel / Shopping"
+                    required>
+            </div>
+
+            <div class="form-group">
+                <label>Date</label>
+
+                <input
+                    type="date"
+                    name="date"
+                    required>
+            </div>
+
+            <div class="form-group">
+                <label>Description</label>
+
+                <textarea
+                    name="description"
+                    placeholder="Add a note..."></textarea>
+            </div>
+
+            <button type="submit">
+                + Add Expense
+            </button>
+
+        </form>
+
+    </div>
+
+
+    <!-- Expenses -->
+    <div class="expense-list">
+
+        <div class="section-title">
+            <div>
+                <p class="small-title">TRANSACTIONS</p>
+                <h2>Recent Expenses</h2>
+            </div>
+        </div>
+
+
+        {% for expense in expenses %}
+
+        <div class="expense-card">
+
+            <div class="expense-info">
+
+                <div class="category-circle">
+                    {{ expense.category|slice:":1"|upper }}
+                </div>
+
+                <div>
+                    <h3>{{ expense.title }}</h3>
+
+                    <p>
+                        {{ expense.category }}
+                        ·
+                        {{ expense.date }}
+                    </p>
+
+                    {% if expense.description %}
+                        <small>{{ expense.description }}</small>
+                    {% endif %}
+                </div>
+
+            </div>
+
+            <div class="expense-price">
+                ₹{{ expense.amount }}
+            </div>
+
+        </div>
+
+        {% empty %}
+
+        <div class="empty-box">
+            <p>No expenses added yet.</p>
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+
+</body>
+</html>
+
