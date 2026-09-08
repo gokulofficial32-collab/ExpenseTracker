@@ -2,7 +2,7 @@
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from .models import Expense, MonthlyBudget
 
@@ -27,6 +27,11 @@ def signin(request):
         })
 
     return render(request, "signin.html")
+@login_required(login_url="/login/")
+def delete_expense(request, expense_id):
+    expense = get_object_or_404(Expense, id=expense_id)
+    expense.delete()
+    return redirect("home")
 
 
 def signup(request):

@@ -339,6 +339,10 @@
 
             <div class="expense-price">
                 ₹{{ expense.amount }}
+                <a href="{% url 'delete_expense' expense.id %}"
+   onclick="return confirm('Are you sure you want to delete this expense?');">
+    Delete
+</a>
             </div>
 
         </div>
