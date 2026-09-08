@@ -32,6 +32,24 @@ def delete_expense(request, expense_id):
     expense = get_object_or_404(Expense, id=expense_id)
     expense.delete()
     return redirect("home")
+@login_required(login_url="/login/")
+def edit_expense(request, expense_id):
+    expense = get_object_or_404(Expense, id=expense_id)
+
+    if request.method == "POST":
+        expense.title = request.POST.get("title")
+        expense.amount = request.POST.get("amount")
+        expense.category = request.POST.get("category")
+        expense.date = request.POST.get("date")
+        expense.description = request.POST.get("description")
+
+        expense.save()
+
+        return redirect("home")
+
+    return render(request, "edit_expense.html", {
+        "expense": expense
+    })
 
 
 def signup(request):
